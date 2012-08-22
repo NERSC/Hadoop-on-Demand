@@ -26,3 +26,17 @@ fi
 
 hadoop-daemon.sh start jobtracker
 
+#
+# If we need to get stat of the jobtracker
+#
+# hadoop-daemon.sh start jobtracker &
+# PID1=$!
+# python zmq_monitor_client.py -s <server_ip> -p <server_port> -d <interval(sec)> -i $PID1 &
+# PID2=$!
+# wait $PID1 &&
+# kill -9 $PID2
+
+#
+# NOTE: Before run "zmq_monitor_client.py", please run "zmq_monitor_server.py" 
+# on other terminal and set server ip, port, interval.
+#
