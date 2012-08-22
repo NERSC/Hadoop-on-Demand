@@ -1,0 +1,28 @@
+#!/bin/sh
+
+#
+# Run parameters
+export TMPL=$HADOOP_HOME/../conf/conf-personal/genepool/
+export HADOOP_LOG_DIR=$SCRATCH/logs/
+export HADOOP_PID_DIR=$SCRATCH/logs/pids/
+export EXT="-nohdfs"
+
+if [ ! -e $HADOOP_CONF_DIR ] ; then
+  IP=$( host $(hostname)|sed 's/.* //')
+  port=$(( 100+( $(od -An -N2 -i /dev/random) )%(40000-1024+1) ))
+  while :
+  do
+    (echo >/dev/tcp/localhost/$port) &>/dev/null &&  port=$(( 100+( $(od -An -N2 -i /dev/random) )%(40000-1000+1) )) || break
+  done
+  IPwithRandomPort=$IP":"$port
+  mkdir $HADOOP_CONF_DIR
+  for file in "mapred" "core" "hdfs"; do
+    cat $TMPL/$file-site${EXT}.xml.tmpl | \
+          sed "s|%IP%|$IPwithRandomPort|"| \
+          sed "s|%SCRATCH%|$SCRATCH|"| \
+          sed "s|%USER%|$USER|" > $HADOOP_CONF_DIR/$file-site.xml
+  done
+fi
+
+hadoop-daemon.sh start jobtracker
+
