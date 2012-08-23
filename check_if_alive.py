@@ -115,7 +115,7 @@ def main(argv):
         return 1 
     else:
         print "seems like dead. check again"
-        time.sleep(60)
+        time.sleep(300)
         cpu_load = get_cpu_load(int(argv[1]))
         if (cpu_load < cpu_thresh):
             print "dead confirmed"
