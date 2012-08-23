@@ -9,18 +9,17 @@ export JAVA_HOME=/global/common/carver/tig/java/jdk1.6.0_13/
 export HADOOP_CONF_DIR="$HOME/.hadoop-genepool"
 export HADOOP_LOG_DIR=$SCRATCH/logs/
 export HADOOP_PID_DIR=$SCRATCH/logs/pids/
-
 export PATH=$PATH:$HADOOP_HOME/bin/
-
-sleep 600 # just for making a room
 
 hadoop-daemon.sh start tasktracker &
 TaskTrackerPID=$!
 
+sleep 600 
+
 cpu_thresh=10.0
 while ! python ./check_if_alive.py $TaskTrackerPID $cpu_thresh
 do
-    sleep 60
+    sleep 300
 done
 
 echo "tasktracker looks dead. Kill it."
