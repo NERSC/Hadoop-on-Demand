@@ -1,0 +1,48 @@
+#!/bin/sh
+
+
+export CONFIG="$HOME/.hadoop-$PBS_JOBID"
+
+if [ -e "$CONFIG/env" ] ; then
+  . $CONFIG/env
+fi
+
+eval "$IDCOMMAND"
+[ -e $LDIR ] && rm -rf /tmp/hdfs-$USER
+if [ -e $HADOOP_LINK ] ; then
+#  [ -e $HADOOP_LINK/$ID ] && rm -rf $HADOOP_LINK/$ID
+  mkdir $HADOOP_LINK/$ID
+  ln -s $HADOOP_LINK/$ID $LDIR
+else
+  mkdir $LDIR
+fi
+mkdir $LDIR/local
+
+[ ! -z $PRELOAD ] && echo "Preloading $PRELOAD" && export LD_PRELOAD=$PRELOAD
+
+function cleanup {
+  killall java > /dev/null 2>&1
+  cd /tmp
+  [ -e $LDIR ] && rm -rf $LDIR
+  exit
+}
+trap cleanup 2 15
+
+export HADOOP_IDENT_STRING=$USER
+if [ $(grep -c $ID $NODELIST) -gt 0 ] ;then
+  export HID=$(grep ":$ID:" $NODELIST|awk -F: '{print $1}')
+  if [ $HID -le $DATANODES ] ;then
+#  echo "Start!"
+    mkdir $LDIR/data
+    bash --norc $HADOOP_HOME/bin/hadoop --config $CONFIG datanode  > $LOGS/data.$HID 2>&1 &
+    sleep 5
+  fi
+
+  [ -z $DEBUG_HADOOP ] || echo "Starting Tracker on $ID"
+  if [ ! -z $HADOOP_PRELOAD ] ; then
+    export LD_PRELOAD=$HADOOP_PRELOAD
+  fi
+  bash --norc $HADOOP_HOME/bin/hadoop --config $CONFIG tasktracker  > $LOGS/task.$ID 2>&1
+  echo "TaskTracker is Done"
+  cleanup
+fi

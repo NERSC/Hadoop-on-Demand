@@ -1,0 +1,22 @@
+export THREADS=8
+export SNAME=$(hostname)
+export INT=ib0
+
+if [ "$PBS_SERVER" = "cvrsvc10-ib" ] ; then
+  export PBS_SERVER=jesup-ib
+fi
+
+export NODECT=$( qstat  $PBS_JOBID -x|sed 's/.*<nodect>//'|sed 's/<.*//'|head -1)
+let NODECT=$NODECT-1
+
+export GET_ID="pbsdsh -o -u hostname"
+export RUN_DEEP="pbsdsh -o -u"
+export IDCOMMAND='ID="$(hostname)"'
+
+export HADOOP_LINK=$SCRATCH/hadoop/
+export HADOOP_OPTS="-Djava.security.egd=file:/dev/urandom"
+export HADOOP_IDENT_STRING=$USER
+
+function create_env {
+  printenv|grep -v '}'|grep -v '{'| sed 's/^/export /' |sed "s/=/='/" |sed "s/\$/'/" > $CONFIG/env
+}

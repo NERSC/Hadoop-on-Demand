@@ -1,0 +1,35 @@
+#!/bin/sh
+
+export CONFIG="$HOME/.hadoop-$PBS_JOBID"
+export TMPL=$HADOOP_HOME/../conf/conf-personal/$NERSC_HOST
+export LOGS="$SCRATCH/logs/${NERSC_HOST}-${PBS_JOBID}"
+
+if [ -d $CONFIG ] ; then
+  if [ -e $CONFIG/pids ] ; then
+    for p in $(sort -r -n $CONFIG/pids) ; do
+      if [ -e "/proc/$p" ] ; then
+        kill $p 
+      fi
+    done
+    rm $CONFIG/pids
+  fi
+
+  for f in core-site.xml  env  hdfs-site.xml  mapred-site.xml  nodelist ;
+  do
+    if [ -e $CONFIG/$f ] ; then
+      rm $CONFIG/$f
+    fi
+  done
+  rmdir $CONFIG
+fi
+
+
+if [ -e "/tmp/hdfs-$USER" ] ; then
+  rm -rf "/tmp/hdfs-$USER/"
+fi
+
+. $TMPL/cleanup
+
+#rm -rf $CONFIG
+#
+#rm -rf $LOGS

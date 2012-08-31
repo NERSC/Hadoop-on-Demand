@@ -1,0 +1,120 @@
+#!/bin/sh
+#PBS -N Hadoop
+#PBS -V
+
+#
+# Run parameters
+export CONFIG="$HOME/.hadoop-$PBS_JOBID"
+if [ $(echo $0|grep -c '^\.') -gt 0 ] ; then
+  HOD_HOME="$(pwd)/$(dirname $0)"
+else
+  HOD_HOME=$(dirname $0)
+fi
+echo $HOD_HOME
+export TMPL=$HOD_HOME/../conf/$NERSC_HOST
+export LDIR=/tmp/hdfs-$USER
+
+function cleanup {
+  echo "Called cleanup"
+  if [ -e $CONFIG/cleanup ] ; then
+    . $CONFIG/cleanup
+  fi
+  killall java
+  rmdir $CONFIG
+  exit
+}
+trap cleanup 2 15
+
+export LOGS="$SCRATCH/logs/${NERSC_HOST}-${PBS_JOBID}"
+echo "Logs can be found in $LOGS"
+[ ! -d "$LOGS" ] && mkdir -p $LOGS
+export NODELIST="$CONFIG/nodelist"
+# Defaults
+export HADOOP_LOG_DIR=$SCRATCH/logs
+
+# Override
+. $TMPL/setup
+
+export IP=$(/sbin/ifconfig $INT|grep 'inet addr'|awk -F: '{print $2}'|sed 's/ .*//')
+echo "http://$SNAME:50030/" > ~/hadoop.lnk
+
+echo "Will start on $NODECT nodes"
+echo ""
+echo "Job Manager running at"
+echo "http://$SNAME:50030/"
+
+
+echo "If you submit jobs outside of this shell, then cut and paste the following..."
+echo ""
+if [ $(echo $SHELL|grep -c csh) -gt 0 ] ; then
+  echo "setenv HADOOP_CONF_DIR to $CONFIG"
+else  
+  echo "export HADOOP_CONF_DIR=$CONFIG"
+fi
+echo ""
+
+[ -d "$CONFIG" ] || mkdir $CONFIG
+
+
+if [ -z $DATANODES ] || [ $DATANODES -eq 0 ] ; then
+  EXT="-nohdfs"
+  export DATANODES=0
+else
+  EXT=""
+fi
+
+for file in "mapred" "core" "hdfs"; do
+  cat $TMPL/$file-site${EXT}.xml.tmpl | \
+	sed "s|%IP%|$IP|"| \
+	sed "s|%SCRATCH%|$SCRATCH|"| \
+	sed "s|%USER%|$USER|" > $CONFIG/$file-site.xml
+done
+
+
+if [ ! -d "$LDIR" ] ; then
+  mkdir $LDIR
+fi
+
+if [ $DATANODES -gt 0 ] ; then
+  echo "Starting HDFS"
+  if [ ! -d $SCRATCH/hdfs/name ] ; then
+    mkdir $SCRATCH/hdfs/name
+  fi
+  ln -s $SCRATCH/hdfs/name $LDIR/name
+  echo "Y"|hadoop --config $CONFIG namenode -format  > $LOGS/format.log 2>&1 
+  hadoop --config $CONFIG namenode > $LOGS/namenode.log 2>&1 &
+  echo $! >> $CONFIG/pids
+fi
+hadoop --config $CONFIG jobtracker > $LOGS/jobtracker.log 2>&1 &
+echo $! >> $CONFIG/pids
+
+# TODO: Add check for job tracker running.  Use sleep as work around.
+sleep 5
+
+#
+# Create env file
+create_env
+
+# Start map reduce tasks
+#
+$GET_ID|sort -n|awk 'BEGIN{i=1}{print i":"$1":";i++}'|grep -v ":$HOSTNAME:" > $NODELIST
+$RUN_DEEP $HADOOP_HOME/bin/run_tracker &
+echo $! >> $CONFIG/pids
+
+# TODO: Add a check for task trackers to be up
+#
+
+echo "Configuring HADOOP_CONF_DIR to use $CONFIG"
+export HADOOP_CONF_DIR=$CONFIG
+
+echo "Starting $SHELL"
+if [ $# -gt 0 ] ; then
+  echo "Will run with args: $*"
+fi
+echo "Type exit to shutdown hadoop"
+$SHELL $*
+
+# Wait for exit from Shell
+cleanup_hadoop
+
+#rm $NODELIST

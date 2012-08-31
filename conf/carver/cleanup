@@ -1,0 +1,13 @@
+#!/bin/sh
+
+echo "Cleaning up clients"
+export NODECT=$( qstat  $PBS_JOBID -x|sed 's/.*<nodect>//'|sed 's/<.*//'|head -1)
+let NODECT=$NODECT-1
+
+#MPI=$(ps aux|grep pbsdsh|grep -v grep |grep $USER|awk '{print $2}')
+#echo "Killing launch $MPI"
+#kill $MPI
+
+#sleep 5
+
+echo "Running cleanup job"
