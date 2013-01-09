@@ -3,6 +3,8 @@
 
 export CONFIG="$HOME/.hadoop-$PBS_JOBID"
 
+[ ! -z $HADOOP_PRELOAD ] && export LD_PRELOAD=$HADOOP_PRELOAD
+
 if [ -e "$CONFIG/env" ] ; then
   . $CONFIG/env
 fi
@@ -18,7 +20,6 @@ else
 fi
 mkdir $LDIR/local
 
-[ ! -z $PRELOAD ] && echo "Preloading $PRELOAD" && export LD_PRELOAD=$PRELOAD
 
 function cleanup {
   killall java > /dev/null 2>&1

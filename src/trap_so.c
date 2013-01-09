@@ -1,6 +1,14 @@
+/*
+ * The Cray platforms do not have name services (i.e. passwd, ldap, etc) configured on the compute nodes.
+ * This library can be preloaded to fix that.
+ *
+ */
+
+
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -14,11 +22,7 @@
 
 
 
-/*int (*next_getpwnam_r)(const char *name, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
-int (*next_getpwuid_r)(uid_t uid, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
-int (*next_getgrnam_r)(const char *name, struct group *grp, char *buf, size_t buflen, struct group **result);
-int (*next_getgrgid_r)(gid_t gid, struct group *grp, char *buf, size_t buflen, struct group **result);
-*/
+#define BUFSIZE 80
 
 void init(void);
 void __attribute__ ((constructor)) init(void);
@@ -68,6 +72,44 @@ int getpwnam_r(const char *name, struct passwd *pwd, char *buf, size_t buflen, s
   return 0;
 }
 
+struct passwd * getpwuid(uid_t uid)
+{
+  char *buf;
+  int buflen=BUFSIZE;
+  struct passwd *pwd;
+  struct passwd *result;
+
+  if (debug)
+    fprintf(stderr,"trapped getpwuid\n");
+  buf=(char *)malloc(buflen);
+  pwd=(struct passwd *)malloc(sizeof(struct passwd));
+  if (buf==NULL || pwd==NULL){
+	errno=ENOMEM;
+	return NULL; 
+  }
+  getpwnam_r(NULL,pwd,buf,buflen,&result);
+  return pwd;
+}
+
+struct group * getgrgid(gid_t gid)
+{
+  char *buf;
+  int buflen=BUFSIZE;
+  struct group *pwd;
+  struct group *result;
+
+  if (debug)
+    fprintf(stderr,"trapped getpwuid\n");
+  buf=(char *)malloc(buflen);
+  pwd=(struct group *)malloc(sizeof(struct group));
+  if (buf==NULL || pwd==NULL){
+	errno=ENOMEM;
+	return NULL; 
+  }
+  getgrnam_r(NULL,pwd,buf,buflen,&result);
+  return pwd;
+}
+
 int getpwuid_r(uid_t uid, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result)
 {
   if (debug)
@@ -115,11 +157,5 @@ int getgrgid_r(uid_t uid, struct group *grp, char *buf, size_t buflen, struct gr
 void init(void)
 {
   return;
-/*
-  next_getpwnam_r = dlsym(RTLD_NEXT, "getpwnam_r");
-  next_getpwuid_r = dlsym(RTLD_NEXT, "getpwuid_r");
-  next_getgrnam_r = dlsym(RTLD_NEXT, "getgrnam_r");
-  next_getgrgid_r = dlsym(RTLD_NEXT, "getgrgid_r");
-*/
 }
 

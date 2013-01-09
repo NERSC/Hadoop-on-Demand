@@ -20,4 +20,4 @@ install-scripts:
 	cp ./scripts/run_tracker $(PREFIX)/bin/
 
 install-conf:
-	cp -a ./conf $(PREFIX)/conf
+	cp -a ./conf $(PREFIX)/

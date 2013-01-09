@@ -1,0 +1,5 @@
+
+if [ $(hostname|grep -c c01) -gt 0 ] ; then
+  echo "Switching to jesup"
+  NERSC_HOST=jesup
+fi

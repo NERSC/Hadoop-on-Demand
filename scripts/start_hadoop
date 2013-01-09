@@ -8,10 +8,10 @@ export CONFIG="$HOME/.hadoop-$PBS_JOBID"
 if [ $(echo $0|grep -c '^\.') -gt 0 ] ; then
   HOD_HOME="$(pwd)/$(dirname $0)"
 else
-  HOD_HOME=$(dirname $0)
+  HOD_HOME=$(dirname $0|sed 's/bin//')
 fi
-echo $HOD_HOME
-export TMPL=$HOD_HOME/../conf/$NERSC_HOST
+[ -e $HOD_HOME/conf/$NERSC_HOST/env ] && . $HOD_HOME/conf/$NERSC_HOST/env
+export TMPL=$HOD_HOME/conf/$NERSC_HOST
 export LDIR=/tmp/hdfs-$USER
 
 function cleanup {
@@ -89,7 +89,7 @@ hadoop --config $CONFIG jobtracker > $LOGS/jobtracker.log 2>&1 &
 echo $! >> $CONFIG/pids
 
 # TODO: Add check for job tracker running.  Use sleep as work around.
-sleep 5
+sleep 3
 
 #
 # Create env file

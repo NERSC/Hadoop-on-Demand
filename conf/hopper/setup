@@ -16,7 +16,7 @@ export HADOOP_OPTS="-Djava.security.egd=file:/dev/urandom"
 #export HADOOP_IDENT_STRING=$USER
 
 # We need to move this eventually
-export HADOOP_PRELOAD=/usr/common/tig/mysge/1.0/lib/libget.so
+export HADOOP_PRELOAD=$HADOOP_HOME/lib/libget.so
 
 function create_env {
   printenv|grep -v '}'|grep -v '{'| sed 's/^/export /' |sed "s/=/='/" |sed "s/\$/'/" > $CONFIG/env
