@@ -37,3 +37,5 @@ while True:
     print "Got msg:", msg
     zsocket.send("OK")
 
+
+## EOF
