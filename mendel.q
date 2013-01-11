@@ -7,6 +7,7 @@
 #$ -cwd
 #$ -l exclusive.c
 #$ -l h_rt=12:00:00
+#$ -l ram.c=120G
 
 export HADOOP_HOME=/global/common/carver/tig/hadoop/hadoop-0.20.2-cdh3u2/
 export JAVA_HOME=/global/common/carver/tig/java/jdk1.6.0_13/
