@@ -8,17 +8,17 @@ export HADOOP_PID_DIR=$SCRATCH/logs/pids/
 export EXT="-nohdfs"
 
 if [ ! -e $HADOOP_CONF_DIR ] ; then
-  IP=$( host $(hostname)|sed 's/.* //')
+  ip=$( host $(hostname)|sed 's/.* //')
   port=$(( 100+( $(od -An -N2 -i /dev/random) )%(40000-1024+1) ))
   while :
   do
     (echo >/dev/tcp/localhost/$port) &>/dev/null &&  port=$(( 100+( $(od -An -N2 -i /dev/random) )%(40000-1000+1) )) || break
   done
-  IPwithRandomPort=$IP":"$port
+  IP=$ip":"$port
   mkdir $HADOOP_CONF_DIR
   for file in "mapred" "core" "hdfs"; do
     cat $TMPL/$file-site${EXT}.xml.tmpl | \
-          sed "s|%IP%|$IPwithRandomPort|"| \
+          sed "s|%IP%|$IP|"| \
           sed "s|%SCRATCH%|$SCRATCH|"| \
           sed "s|%USER%|$USER|" > $HADOOP_CONF_DIR/$file-site.xml
   done

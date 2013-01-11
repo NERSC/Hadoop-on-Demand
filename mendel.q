@@ -23,7 +23,7 @@ TaskTrackerPID=$!
 sleep 600 
 
 cpu_thresh=10.0
-while ! python /project/projectdirs/genomes/sulsj/test/2012.08.06-hadoop-on-demand/git-cloned/Hadoop-on-Demand/check_if_alive.py $TaskTrackerPID $cpu_thresh
+while ! check_if_alive.py $TaskTrackerPID $cpu_thresh
 do
     sleep 300
 done

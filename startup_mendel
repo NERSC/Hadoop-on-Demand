@@ -2,7 +2,7 @@
 
 #
 # Run parameters
-export TMPL=$HADOOP_HOME/../conf/conf-personal/genepool/
+export TMPL=$HADOOP_HOME/../conf/conf-personal/mendel/
 export HADOOP_LOG_DIR=$SCRATCH/logs/
 export HADOOP_PID_DIR=$SCRATCH/logs/pids/
 export EXT="-nohdfs"
