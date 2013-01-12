@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+<property>
+<name>mapred.job.tracker</name>
+<value>hdfs://%IP%:50031/</value>
+</property>
+
+<property>
+<name>mapred.job.tracker.http.address</name>
+<value>0.0.0.0:50050</value>
+</property>
+
+<property>
+<name>mapred.tasktracker.map.tasks.maximum</name>
+<value>12</value>
+</property>
+
+<property>
+<name>mapred.tasktracker.reduce.tasks.maximum</name>
+<value>4</value>
+</property>
+
+<property>
+<name>mapred.system.dir</name>
+<value>/global/scratch/sd/%USER%/mapredsystem/</value>
+</property>
+
+<property>
+<name>mapred.local.dir</name>
+<value>/tmp/hadoop-%USER%/mapred/local/</value>
+</property>
+
+</configuration>

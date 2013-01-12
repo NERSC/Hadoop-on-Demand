@@ -1,17 +1,31 @@
 #!/bin/sh
 
+# Shane Canon (scanon@lbl.gov)
+# 2012
+# LBL
+#
+# This will create a config file (if it doesn't already exist.
+# If the file 'local' exist in the conf dir, it will copy things
+# to a local scratch area.
+
+# Update: Seung-Jin Sul
+# Date: 1.11.2013
+
 #
 # Run parameters
 export TMPL=$HADOOP_HOME/../conf/conf-personal/mendel/
 export HADOOP_LOG_DIR=$SCRATCH/logs/
 export HADOOP_PID_DIR=$SCRATCH/logs/pids/
 export EXT="-nohdfs"
+export HADOOP_CONF_DIR=$HOME/.hadoop-mendel
 
 # To increase the memory available to the job tracker
 #export HADOOP_HEAPSIZE=12000
 
 if [ ! -e $HADOOP_CONF_DIR ] ; then
-  ip=$( host $(hostname)|sed 's/.* //')
+  ip=$( python -c 'import socket; print socket.gethostbyname(socket.gethostname())' )
+  echo "IP = $ip"
+  #ip=$( host $(hostname)|sed 's/.* //')
   port=$(( 100+( $(od -An -N2 -i /dev/random) )%(40000-1024+1) ))
   while :
   do
@@ -19,6 +33,9 @@ if [ ! -e $HADOOP_CONF_DIR ] ; then
   done
   IP=$ip":"$port
   mkdir $HADOOP_CONF_DIR
+  if [ ! -e $HADOOP_CONF_DIR ] ; then
+      echo "Failed to create HADOOP_CONF_DIR"
+  fi
   for file in "mapred" "core" "hdfs"; do
     cat $TMPL/$file-site${EXT}.xml.tmpl | \
           sed "s|%IP%|$IP|"| \
@@ -27,4 +44,24 @@ if [ ! -e $HADOOP_CONF_DIR ] ; then
   done
 fi
 
+if [ -e "${HADOOP_CONF_DIR}/local" ] ; then
+  if [ ! -e "/scratch" ] ; then
+    echo "Local install only works if there is a local /scratch dir."
+    exit -1
+  fi
+  echo "Copying key files to local"
+  LOCAL=/scratch/${USER}
+  mkdir -p $LOCAL
+  rsync -avz $HADOOP_HOME/{bin,conf,*jar,ivy,lib,sbin,webapps} $LOCAL/hadoop
+  rsync -avz $HADOOP_CONF_DIR/* $LOCAL/hadoop/conf/
+  rsync -avz $JAVA_HOME/{bin,jre,lib} $LOCAL/java
+
+  export HADOOP_HOME=$LOCAL/hadoop
+  export HADOOP_CONF_DIR=$HADOOP_HOME/conf
+  export HADOOP_LOG_DIR=$LOCAL/logs/
+  export JAVA_HOME=$LOCAL/java
+  [ -e $HADOOP_LOG_DIR ] || mkdir $HADOOP_LOG_DIR
+fi
+
 hadoop-daemon.sh start jobtracker
+

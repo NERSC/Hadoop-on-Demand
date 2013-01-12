@@ -1,0 +1,9 @@
+export THREADS=16
+export SNAME=$(hostname)
+export NODECT=$( qstat  $PBS_JOBID -x|sed 's/.*<nodect>//'|sed 's/<.*//'|head -1)
+let NODECT=$NODECT-1
+
+export HADOOP_LINK=$SCRATCH/hadoop/
+export HADOOP_OPTS="-Djava.security.egd=file:/dev/urandom"
+export HADOOP_IDENT_STRING=$USER
+
